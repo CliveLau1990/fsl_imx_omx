@@ -54,11 +54,14 @@
 #define FRAME_ALIGN (8)
 #define FRAME_ALIGN_WIDTH (FRAME_ALIGN*2)
 #define FRAME_ALIGN_HEIGHT (IS_G2_DECODER ? FRAME_ALIGN:FRAME_ALIGN_WIDTH)
-#else
+#endif
+
+#ifdef MALONE_VPU
+#undef FRAME_ALIGN
+#define FRAME_ALIGN (256)
 #define FRAME_ALIGN_WIDTH FRAME_ALIGN
 #define FRAME_ALIGN_HEIGHT FRAME_ALIGN
 #endif
-
 
 
 //nOutBufferCntDec=nMinFrameBufferCount + FRAME_SURPLUS
@@ -756,6 +759,9 @@ OMX_S32 FramePoolCreateDecoderRegisterFrame(
 				//FIXME: In this case, memory management will be out of order !!!!
 				VPU_COMP_ERR_LOG("%s: warning: buffer base address isn't aligned(%d bytes) correctly: 0x%X \r\n",__FUNCTION__,(UINT32)nInChromaAlign,(UINT32)ptrVirt);
 			}
+#ifdef MALONE_VPU
+            pInOutFrmPool->outFrameInfo[i].pDisplayFrameBuf = &pOutRegisterFrame[nCnt];
+#endif
 			//update frame owner/state
 			pInOutFrmPool->eFrmOwner[i]=VPU_COM_FRM_OWNER_DEC;
 			pInOutFrmPool->eFrmState[i]=VPU_COM_FRM_STATE_FREE;
@@ -767,14 +773,14 @@ OMX_S32 FramePoolCreateDecoderRegisterFrame(
 		}
 		else
 		{
-            #ifndef HANTRO_VPU
+            #ifdef CHIPSMEDIA_VPU
 			VPU_COMP_ERR_LOG("%s: warning: frame pool is not clean before register frame for vpu !!",__FUNCTION__);
             #endif
 			//return -1;
 		}
 	}
 
-#ifdef HANTRO_VPU
+#ifndef CHIPSMEDIA_VPU
     return nInRequiredCnt;
 #endif
 
@@ -1872,6 +1878,11 @@ OMX_ERRORTYPE VpuDecoder::SetDefaultSetting()
     sOutFmt.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
 #endif
 
+#ifdef MALONE_VPU
+    nOutPortFormatCnt = 1;
+    eOutPortPormat[0] = OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled;
+    sOutFmt.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled;
+#endif
 
 	bFilterSupportPartilInput = OMX_TRUE;
 	nInBufferCnt = DEFAULT_BUF_IN_CNT;
@@ -2441,7 +2452,7 @@ OMX_ERRORTYPE VpuDecoder::SetParameter(
 		if(OMX_ErrorNone!=SetRoleFormat((OMX_STRING)cRole))
 		{
 			VPU_COMP_ERR_LOG("%s: set role format failure \r\n",__FUNCTION__);
-			return OMX_ErrorBadParameter;
+			return OMX_ErrorUndefined;
 		}
 	}
 	else if(nParamIndex ==  OMX_IndexParamVideoWmv)
@@ -2819,7 +2830,6 @@ OMX_ERRORTYPE VpuDecoder::SetOutputBuffer(OMX_PTR pBuffer)
                 VPU_COMP_ERR_LOG("%s: create register frame failure \r\n",__FUNCTION__);
                 return OMX_ErrorInsufficientResources;
             }
-
             //vpu register step: register frame buffs
             VPU_COMP_SEM_LOCK(psemaphore);
             ret=VPU_DecRegisterFrameBuffer(nHandle, &frameBuf, BufNum);
@@ -2828,12 +2838,30 @@ OMX_ERRORTYPE VpuDecoder::SetOutputBuffer(OMX_PTR pBuffer)
             VPU_COMP_LOG("SetOutputBuffer call ret = %d, nFreeOutBufCntDec=%d\r\n",ret,nFreeOutBufCntDec);
         }
         #endif
+        #ifdef MALONE_VPU
+            VpuFrameBuffer frameBuf;
+            OMX_S32 BufNum;
+
+            BufNum=FramePoolCreateDecoderRegisterFrame(&frameBuf, &sFramePoolInfo, 1, nPadWidth, nPadHeight, &sVpuMemInfo,&sMemOperator,sOutFmt.eColorFormat,nChromaAddrAlign,&nRegisterFramePhyAddr);
+            if(-1==BufNum)
+            {
+                VPU_COMP_ERR_LOG("%s: create register frame failure \r\n",__FUNCTION__);
+                return OMX_ErrorInsufficientResources;
+            }
+            nBufExist=FramePoolBufExist(pBuffer,&sFramePoolInfo,&pPhyAddr,&index);
+            if(nBufExist <= 0)
+                return OMX_ErrorInsufficientResources;
+            FramePoolSetBufState(&sFramePoolInfo,index,VPU_COM_FRM_STATE_OUT);
+            goto set_output_buffer;
+        #endif
 	}
 	else
 	{
+set_output_buffer:
 		VpuDecoderFrmOwner eOwner;
 		VpuDecoderFrmState eState;
 		FramePoolGetBufProperty(&sFramePoolInfo,index,&eOwner,&eState,&pFrameInfo);
+        VPU_COMP_LOG("set_output_buffer FramePoolGetBufProperty owner=%d,state=%d",eOwner,eState);
 		switch(eOwner)
 		{
 			case VPU_COM_FRM_OWNER_DEC:
@@ -2923,18 +2951,24 @@ OMX_ERRORTYPE VpuDecoder::InitFilter()
 		VPU_DecDisCapability(nHandle,VPU_DEC_CAP_RESOLUTION_CHANGE);
 	}
 
+    #ifdef MALONE_VPU
+    eVpuDecoderState=VPU_COM_STATE_DO_DEC;
+    return OMX_ErrorNone;
+    #endif
+
 	if(nOutBufferCnt != nOutBufferCntDec + nOutBufferCntPost){
 	    // nOutBufferCnt could be modified in PortSettingChanged() , need to check and update nOutBufferCntDec
 	    VPU_COMP_LOG("InitFilter: nOutBufferCnt was modified %d->%d, modify nOutBufferCntDec %d->%d"
             , nOutBufferCntDec + nOutBufferCntPost, nOutBufferCnt, nOutBufferCntDec, nOutBufferCnt - nOutBufferCntPost);
 	    nOutBufferCntDec = nOutBufferCnt - nOutBufferCntPost;
 	}
-    #ifdef HANTRO_VPU
+    #ifndef CHIPSMEDIA_VPU
     bufferCnt = sInitInfo.nMinFrameBufferCount;
     VPU_COMP_LOG("InitFilter buffer cnt = %d",bufferCnt);
     #else
     bufferCnt = nOutBufferCntDec;
     #endif
+
 	BufNum=FramePoolCreateDecoderRegisterFrame(frameBuf, &sFramePoolInfo, bufferCnt, nWidthStride, nHeightStride, &sVpuMemInfo,&sMemOperator,sOutFmt.eColorFormat,nChromaAddrAlign,&nRegisterFramePhyAddr);
 
 	if(-1==BufNum)
@@ -3054,7 +3088,14 @@ RepeatPlay:
 		case VPU_COM_STATE_WAIT_FRM:
         {
             OMX_S32 targetBufferCnt = 0;
-            #ifdef HANTRO_VPU
+
+            #ifdef MALONE_VPU
+            eVpuDecoderState=VPU_COM_STATE_DO_INIT;
+		    bufRet =FILTER_DO_INIT;
+            return bufRet;
+            #endif
+
+            #ifndef CHIPSMEDIA_VPU
             targetBufferCnt = sInitInfo.nMinFrameBufferCount;
             #else
             targetBufferCnt = (OMX_S32)nOutBufferCnt;
@@ -3152,6 +3193,9 @@ RepeatPlay:
 		case VPU_COM_STATE_OPENED:
 			break;
 		case VPU_COM_STATE_DO_DEC:
+            #ifdef MALONE_VPU
+            break;
+            #endif
 			if(bEnabledPostProcess)
 			{
 				OMX_S32 index;
@@ -3196,7 +3240,7 @@ RepeatPlay:
 				}
 			}
 			//FIXME: for iMX6(now its major version==2), we needn't to return all frame buffers.
-			#ifdef HANTRO_VPU
+			#ifndef CHIPSMEDIA_VPU
             if(0)//follow imx6 call flow for hantro vpu
             #else
 			if((sVpuVer.nFwMajor!=2)&&(sVpuVer.nFwMajor!=3))
@@ -3269,7 +3313,7 @@ RepeatPlay:
 		if(bInEos==OMX_TRUE)
 		{
 			//create and send EOS data (with length=0)
-            #ifdef HANTRO_VPU
+            #ifndef CHIPSMEDIA_VPU
             pBitstream=(OMX_U8*)0x01;
             #else
             pBitstream=&dummy;
@@ -3384,6 +3428,16 @@ RepeatPlay:
 		FilterBufRetCode ret;
 		ret=ProcessVpuInitInfo();
 		bufRet=(FilterBufRetCode)((OMX_U32)bufRet|(OMX_U32)ret);
+
+#ifdef HANTRO_VPU
+        VpuBufferNode input;
+        memset(&input, 0, sizeof(VpuBufferNode));
+        VPU_COMP_SEM_LOCK(psemaphore);
+        //do not care about the result and bufRetCode
+        (void)VPU_DecDecodeBuf(nHandle, &input,(INT32*)&bufRetCode);
+        VPU_COMP_SEM_UNLOCK(psemaphore);
+#endif
+
 		return bufRet;
 	}
 
@@ -3529,7 +3583,7 @@ RepeatPlay:
 	//check "no enough buf"
 	if(bufRetCode&VPU_DEC_NO_ENOUGH_BUF)
 	{
-        #ifdef HANTRO_VPU
+        #ifndef CHIPSMEDIA_VPU
         //direct return for hantro vpu
         if(1)
             bufRet=(FilterBufRetCode)(bufRet|FILTER_NO_OUTPUT_BUFFER);
@@ -3970,7 +4024,9 @@ OMX_ERRORTYPE VpuDecoder::FlushOutputBuffer()
 				ASSERT(nFreeOutBufCntPost==num);
 			}
 			//flush vpu input/output
+#ifndef MALONE_VPU//test for vpu wrapper
 			ret=FlushFilter();
+#endif
 
 			//re set out map info: simulate: all frames have been returned from vpu and been recorded into outFrameInfo
 #if 0
@@ -4213,7 +4269,7 @@ FilterBufRetCode VpuDecoder::ProcessVpuInitInfo()
 		nPadHeight = Align(sInFmt.nFrameHeight ,FRAME_ALIGN);//(sInFmt.nFrameHeight +15)&(~15);
 	}
 
-    #if HANTRO_VPU
+    #ifndef CHIPSMEDIA_VPU
     nPadWidth = Align(sInFmt.nFrameWidth,FRAME_ALIGN_WIDTH);
     nPadHeight = Align(sInFmt.nFrameHeight ,FRAME_ALIGN_HEIGHT);
     #endif
@@ -4397,10 +4453,15 @@ FilterBufRetCode VpuDecoder::ProcessVpuInitInfo()
 		OutputFmtChanged();
 	}
 
+    #ifdef MALONE_VPU
+    eVpuDecoderState=VPU_COM_STATE_DO_DEC;
+    #else
 	//bufRet|=FILTER_DO_INIT;
 	bufRet=(FilterBufRetCode)(bufRet|FILTER_NO_OUTPUT_BUFFER); //request enough output buffer before do InitFilter() operation
 
 	VPU_COMP_LOG("%s: enter wait frame state \r\n",__FUNCTION__);
+    #endif
+
 	return bufRet;	//OMX_ErrorNone;
 }
 
@@ -4600,6 +4661,15 @@ OMX_ERRORTYPE VpuDecoder::PortFormatChanged(OMX_U32 nPortIndex)
         }
     }
     return OMX_ErrorNone;
+}
+
+OMX_BOOL VpuDecoder::DefaultOutputBufferNeeded()
+{
+    #ifdef MALONE_VPU
+    return OMX_FALSE;
+    #else
+    return OMX_TRUE;
+    #endif
 }
 
 /**< C style functions to expose entry point for the shared library */

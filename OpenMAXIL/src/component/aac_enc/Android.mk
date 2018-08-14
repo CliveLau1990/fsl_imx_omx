@@ -13,8 +13,8 @@ LOCAL_CFLAGS += $(FSL_OMX_CFLAGS)
 LOCAL_LDFLAGS += $(FSL_OMX_LDFLAGS)
 
 LOCAL_C_INCLUDES += $(FSL_OMX_INCLUDES) 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../../../../frameworks/base/media/libstagefright/codecs/common/include/ 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../../../../frameworks/av/media/libstagefright/codecs/common/include/ 
+LOCAL_C_INCLUDES += frameworks/base/media/libstagefright/codecs/common/include/
+LOCAL_C_INCLUDES += frameworks/av/media/libstagefright/codecs/common/include/
 
 LOCAL_SHARED_LIBRARIES := lib_omx_common_v2_arm11_elinux \
                           lib_omx_osal_v2_arm11_elinux \

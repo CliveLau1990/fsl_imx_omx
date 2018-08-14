@@ -43,14 +43,6 @@ role_priority=3;
 $
 
 @
-component_name=OMX.Freescale.std.clocksrc.sw-based;
-library_path=lib_omx_clock_v2_arm11_elinux.so;
-component_entry_function=ClockInit;
-component_role=clocksrc;
-role_priority=3;
-$
-
-@
 component_name=OMX.Freescale.std.audio_decoder.pcm.sw-based;
 library_path=lib_omx_pcm_dec_v2_arm11_elinux.so;
 component_entry_function=PcmDecInit;
@@ -62,7 +54,7 @@ $
 component_name=OMX.Freescale.std.audio_decoder.aac.sw-based;
 library_path=lib_omx_aac_dec_v2_arm11_elinux.so;
 component_entry_function=AacDecInit;
-component_role=audio_decoder.aac;
+component_role=audio_decoder.aac-fsl;
 role_priority=2;
 $
 
@@ -143,7 +135,7 @@ $
 component_name=OMX.Freescale.std.audio_decoder.aac.hw-based;
 library_path=lib_omx_aac_dec_v2_arm11_elinux.so;
 component_entry_function=AacHwDecInit;
-component_role=audio_decoder.aac;
+component_role=audio_decoder.aac-fsl;
 role_priority=3;
 $
 
@@ -155,4 +147,35 @@ component_role=audio_decoder.bsac;
 role_priority=3;
 $
 
+@
+component_name=OMX.Freescale.std.video_decoder.avc.v3.hw-based;
+library_path=lib_omx_vpu_dec_v2_arm11_elinux.so;
+component_entry_function=VpuDecoderInit;
+component_role=video_decoder.avc;
+role_priority=3;
+$
+
+@
+component_name=OMX.Freescale.std.video_decoder.hevc.hw-based;
+library_path=lib_omx_vpu_dec_v2_arm11_elinux.so;
+component_entry_function=VpuDecoderInit;
+component_role=video_decoder.hevc;
+role_priority=3;
+$
+
+@
+component_name=OMX.Freescale.std.video_decoder.mpeg2.hw-based;
+library_path=lib_omx_vpu_dec_v2_arm11_elinux.so;
+component_entry_function=VpuDecoderInit;
+component_role=video_decoder.mpeg2;
+role_priority=3;
+$
+
+@
+component_name=OMX.Freescale.std.video_decoder.mpeg4.hw-based;
+library_path=lib_omx_vpu_dec_v2_arm11_elinux.so;
+component_entry_function=VpuDecoderInit;
+component_role=video_decoder.mpeg4;
+role_priority=3;
+$
 

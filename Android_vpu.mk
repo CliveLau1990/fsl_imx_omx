@@ -13,38 +13,38 @@ FSL_OMX_INCLUDES := \
 	$(LOCAL_PATH)/utils \
 	$(LOCAL_PATH)/OpenMAXIL/ghdr \
 	$(LOCAL_PATH)/OpenMAXIL/src/component/common \
-	$(LOCAL_PATH)/../imx-vpu-cnm \
-	$(LOCAL_PATH)/../../hardware/imx/include \
-	$(LOCAL_PATH)/../../frameworks/native/include/media/hardware \
-	$(LOCAL_PATH)/../../device/fsl-codec/ghdr \
-	$(LOCAL_PATH)/../../device/fsl-codec/ghdr/common
+	$(IMX_VPU_CNM_PATH)/imx-vpu-cnm \
+	$(IMX_PATH)/imx/include \
+	frameworks/native/include/media/hardware \
+	$(FSL_CODEC_PATH)/fsl-codec/ghdr \
+	$(FSL_CODEC_PATH)/fsl-codec/ghdr/common
 
-FSL_OMX_INCLUDES +=	$(FSL_OMX_PATH)/../imx-vpu-hantro/decoder_sw/software/source/inc \
-					$(FSL_OMX_PATH)/../imx-vpu-hantro/openmax_il/source/decoder \
-					$(FSL_OMX_PATH)/../imx-vpu-hantro/openmax_il/source
+FSL_OMX_INCLUDES +=	$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/decoder_sw/software/source/inc \
+					$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/openmax_il/source/decoder \
+					$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/openmax_il/source
 
 ifeq ($(use_gralloc_v3), true)
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v3 \
-	                    $(LOCAL_PATH)/../../hardware/imx/display/display
+    FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v3 \
+	                    $(IMX_PATH)/imx/display/display
 endif
 
 ifeq ($(TARGET_BOARD_PLATFORM), imx5x)
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx5x/libgralloc
+    FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx5x/libgralloc
     FSL_OMX_CFLAGS += -DMX5X
 endif
 ifeq ($(TARGET_BOARD_PLATFORM), imx6)
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2 \
-                        $(LOCAL_PATH)/../../device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/display/gralloc_v2 \
-                        $(LOCAL_PATH)/../../device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/include
+    FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2 \
+                        device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/display/gralloc_v2 \
+                        device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/include
     FSL_OMX_CFLAGS += -DMX6X
 endif
 ifeq ($(TARGET_BOARD_PLATFORM), imx7)
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2 \
-                        $(LOCAL_PATH)/../../device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/gralloc
+    FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2 \
+                        device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/gralloc
     FSL_OMX_CFLAGS += -DMX7X
 endif
 ifeq ($(TARGET_BOARD_PLATFORM), imx8)
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+    FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
     FSL_OMX_CFLAGS += -DMX8X
 endif
 

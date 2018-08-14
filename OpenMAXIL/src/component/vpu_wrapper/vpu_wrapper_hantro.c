@@ -131,6 +131,7 @@ typedef struct
   const void *pdwl;
   /* hantro decoder */
   CODEC_PROTOTYPE *codec;
+  OMX_VIDEO_PARAM_CONFIGTYPE config;
 
   /* decode parameters */
   int iframeSearchEnable;
@@ -302,8 +303,6 @@ VpuDecRetCode VPU_DecOpen(VpuDecHandle *pOutHandle, VpuDecOpenParam * pInParam,V
   VpuMemSubBlockInfo * pMemPhy;
   VpuMemSubBlockInfo * pMemVirt;
   VpuDecHandleInternal* pVpuObj;
-  OMX_VIDEO_PARAM_G2CONFIGTYPE g2Conf;
-  OMX_VIDEO_PARAM_G1CONFIGTYPE g1Conf;
   bool bDeblock = true;
   bool bIsMvcStream = false;
   VpuDecObj* pObj;
@@ -345,78 +344,78 @@ VpuDecRetCode VPU_DecOpen(VpuDecHandle *pOutHandle, VpuDecOpenParam * pInParam,V
     VPU_ERROR("%s: DWLInit failed !! \r\n",__FUNCTION__);
     return VPU_DEC_RET_FAILURE;
   }
-  memset(&g2Conf, 0, sizeof(OMX_VIDEO_PARAM_G2CONFIGTYPE));
-  memset(&g1Conf, 0, sizeof(OMX_VIDEO_PARAM_G1CONFIGTYPE));
-  g2Conf.bEnableTiled = false;
+  pObj->config.g2_conf.bEnableTiled = false;
+  pObj->config.g1_conf.bEnableTiled = false;
   if (pInParam->nTiled2LinearEnable)
-    g2Conf.bEnableTiled = true;
-  g2Conf.ePixelFormat = OMX_VIDEO_G2PixelFormat_Default;
+  {
+    pObj->config.g2_conf.bEnableTiled = true;
+    pObj->config.g1_conf.bEnableTiled = true;
+  }
+  pObj->config.g2_conf.ePixelFormat = OMX_VIDEO_G2PixelFormat_Default;
   if (pInParam->nPixelFormat)
-    g2Conf.ePixelFormat = OMX_VIDEO_G2PixelFormat_8bit;
-  g2Conf.bEnableRFC = false;
+    pObj->config.g2_conf.ePixelFormat = OMX_VIDEO_G2PixelFormat_8bit;
+  pObj->config.g2_conf.bEnableRFC = false;
   if (pInParam->nEnableVideoCompressor)
-    g2Conf.bEnableRFC = true;
-  g2Conf.bEnableRingBuffer = pObj->ringbuffer = false;
-  g1Conf.bEnableTiled = false;
-  g1Conf.bAllowFieldDBP = false;
+    pObj->config.g2_conf.bEnableRFC = true;
+  pObj->config.g2_conf.bEnableRingBuffer = pObj->ringbuffer = false;
+  pObj->config.g2_conf.bEnableFetchOnePic = true;
+  pObj->config.g1_conf.bAllowFieldDBP = false;
   
   if(pInParam->nAdaptiveMode == 1){
-    g1Conf.bEnableAdaptiveBuffers = true;
-    g1Conf.nGuardSize = 0;
-    g2Conf.bEnableAdaptiveBuffers = true;
-    g2Conf.nGuardSize = 0;
+    pObj->config.g1_conf.bEnableAdaptiveBuffers = true;
+    pObj->config.g1_conf.nGuardSize = 0;
+    pObj->config.g2_conf.bEnableAdaptiveBuffers = true;
+    pObj->config.g2_conf.nGuardSize = 0;
     VPU_LOG("VPU_DecOpen enable nAdaptiveMode");
   }
-
   if(pInParam->nSecureMode == 1){
-    g1Conf.bEnableSecureMode = true;
-    g2Conf.bEnableSecureMode = true;
+    pObj->config.g1_conf.bEnableSecureMode = true;
+    pObj->config.g2_conf.bEnableSecureMode = true;
     pObj->bSecureMode = true;
-    VPU_LOG("VPU_DecOpen enable secure mode");
   }
 
   VPU_LOG("format: %d \r\n",pInParam->CodecFormat);
   switch (pInParam->CodecFormat) {
     case VPU_V_AVC:
       pObj->codec = HantroHwDecOmx_decoder_create_h264(pObj->pdwl,
-          bIsMvcStream, &g1Conf);
+          bIsMvcStream, &pObj->config.g1_conf);
       VPU_LOG("open H.264 \r\n");
       break;
     case VPU_V_MPEG2: 	 /**< AKA: H.262 */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg2(pObj->pdwl,
-          &g1Conf);
+          &pObj->config.g1_conf);
       VPU_LOG("open Mpeg2 \r\n");
       break;
     case VPU_V_H263:		 /**< H.263 */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_H263, &g1Conf);
+          bDeblock, MPEG4FORMAT_H263, &pObj->config.g1_conf);
       VPU_LOG("open H263 \r\n");
       break;
     case VPU_V_MPEG4: 	 /**< MPEG-4 */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_MPEG4, &g1Conf);
+          bDeblock, MPEG4FORMAT_MPEG4, &pObj->config.g1_conf);
       VPU_LOG("open Mpeg4 \r\n");
       break;
     case VPU_V_SORENSON: 	 /**< Sorenson */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_SORENSON, &g1Conf);
+          bDeblock, MPEG4FORMAT_SORENSON, &pObj->config.g1_conf);
       VPU_LOG("open Mpeg4 \r\n");
       break;
     case VPU_V_DIVX4:		/**< DIVX 4 */
     case VPU_V_DIVX56:		/**< DIVX 5/6 */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_CUSTOM_1, &g1Conf);
+          bDeblock, MPEG4FORMAT_CUSTOM_1, &pObj->config.g1_conf);
       VPU_LOG("open DIVX 4 \r\n");
       VPU_LOG("open DIVX 56 \r\n");
       break;
     case VPU_V_XVID:		/**< XVID */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_MPEG4, &g1Conf);
+          bDeblock, MPEG4FORMAT_MPEG4, &pObj->config.g1_conf);
       VPU_LOG("open XVID \r\n");
       break;
     case VPU_V_DIVX3:		/**< DIVX 3 */
       pObj->codec = HantroHwDecOmx_decoder_create_mpeg4(pObj->pdwl,
-          bDeblock, MPEG4FORMAT_CUSTOM_1_3, &g1Conf);
+          bDeblock, MPEG4FORMAT_CUSTOM_1_3, &pObj->config.g1_conf);
       VPU_LOG("open DIVX 3 \r\n");
       break;
     case VPU_V_RV:		
@@ -425,13 +424,13 @@ VpuDecRetCode VPU_DecOpen(VpuDecHandle *pOutHandle, VpuDecOpenParam * pInParam,V
     case VPU_V_VC1:		 /**< all versions of Windows Media Video */
     case VPU_V_VC1_AP:
       pObj->codec = HantroHwDecOmx_decoder_create_vc1(pObj->pdwl,
-          &g1Conf);
+          &pObj->config.g1_conf);
       VPU_LOG("open VC1 \r\n");
       break;
     case VPU_V_AVC_MVC:
       bIsMvcStream = true;
       pObj->codec = HantroHwDecOmx_decoder_create_h264(pObj->pdwl,
-          bIsMvcStream, &g1Conf);
+          bIsMvcStream, &pObj->config.g1_conf);
       VPU_LOG("open H.264 MVC \r\n");
       break;
     case VPU_V_MJPG:
@@ -444,30 +443,30 @@ VpuDecRetCode VPU_DecOpen(VpuDecHandle *pOutHandle, VpuDecOpenParam * pInParam,V
       break;
     case VPU_V_AVS:
       pObj->codec = HantroHwDecOmx_decoder_create_avs(pObj->pdwl,
-          &g1Conf);
+          &pObj->config.g1_conf);
       VPU_LOG("open AVS \r\n");
       break;
     case VPU_V_VP6:
       pObj->codec = HantroHwDecOmx_decoder_create_vp6(pObj->pdwl,
-          &g1Conf);
+          &pObj->config.g1_conf);
       VPU_LOG("open VP6 \r\n");
       break;
     case VPU_V_VP8:
       pObj->codec = HantroHwDecOmx_decoder_create_vp8(pObj->pdwl,
-          &g1Conf);
+          &pObj->config.g1_conf);
       VPU_LOG("open VP8 \r\n");
       break;
     case VPU_V_HEVC:
       if(!pObj->bSecureMode){
-        g2Conf.bEnableRingBuffer = pObj->ringbuffer = true;
+        pObj->config.g2_conf.bEnableRingBuffer = pObj->ringbuffer = true;
       }
       pObj->codec = HantroHwDecOmx_decoder_create_hevc(pObj->pdwl,
-          &g2Conf);
+          &pObj->config.g2_conf);
       VPU_LOG("open HEVC \r\n");
       break;
     case VPU_V_VP9:
       pObj->codec = HantroHwDecOmx_decoder_create_vp9(pObj->pdwl,
-          &g2Conf);
+          &pObj->config.g2_conf);
       VPU_LOG("open VP9 \r\n");
       break;
     default:
@@ -610,6 +609,14 @@ VpuDecRetCode VPU_DecConfig(VpuDecHandle InHandle, VpuDecConfig InDecConf, void*
       pObj->initDataCountThd=para;
       break;
     case VPU_DEC_CONF_ENABLE_TILED:
+      pObj->config.g2_conf.bEnableTiled = false;
+      pObj->config.g1_conf.bEnableTiled = false;
+      if ((*((int*)pInParam)) == 1)
+      {
+        pObj->config.g2_conf.bEnableTiled = true;
+        pObj->config.g1_conf.bEnableTiled = true;
+      }
+      pObj->codec->setinfo(pObj->codec, &pObj->config);
       break;
     default:
       VPU_ERROR("%s: failure: invalid setting \r\n",__FUNCTION__);
@@ -901,7 +908,14 @@ static VpuDecRetCode VPU_DecGetFrame(VpuDecObj* pObj, int* pOutBufRetCode)
       pObj->frameInfo.pExtInfo->FrmCropRect.nRight=frm.outBufPrivate.nFrameWidth;
       pObj->frameInfo.pExtInfo->FrmCropRect.nBottom=frm.outBufPrivate.nFrameHeight;
       //pObj->frameInfo.pExtInfo->nQ16ShiftWidthDivHeightRatio=pSrcInfo->Q16ShiftWidthDivHeightRatio;
+      if(frm.outBufPrivate.sRfcTable.nLumaBusAddress && frm.outBufPrivate.sRfcTable.nChromaBusAddress)
+      {
+        pObj->frameInfo.pExtInfo->rfc_luma_offset=frm.outBufPrivate.sRfcTable.nLumaBusAddress - frm.fb_bus_address;
+        pObj->frameInfo.pExtInfo->rfc_chroma_offset=frm.outBufPrivate.sRfcTable.nChromaBusAddress - frm.fb_bus_address;
+      }
       VPU_LOG("crop: %d %d\n", frm.outBufPrivate.nFrameWidth, frm.outBufPrivate.nFrameHeight);
+      VPU_LOG("video frame base: %p: RFC table Luma: %p Chroma: %p\n", frm.fb_bus_address,
+          frm.outBufPrivate.sRfcTable.nLumaBusAddress, frm.outBufPrivate.sRfcTable.nChromaBusAddress);
 
       *pOutBufRetCode |= VPU_DEC_OUTPUT_DIS;
       pObj->state=VPU_DEC_STATE_OUTOK;
@@ -971,7 +985,6 @@ static VpuDecRetCode VPU_DecDecode(VpuDecObj* pObj, int* pOutBufRetCode)
     // got at least one complete frame between first and last
     stream.bus_data = pObj->pBsBufVirtStart + pObj->nBsBufOffset + first;
     stream.buf_data = pObj->pBsBufVirtStart;
-
     stream.bus_address = (OSAL_BUS_WIDTH)pObj->pBsBufPhyStart + pObj->nBsBufOffset + first;
     stream.buf_address = (OSAL_BUS_WIDTH)pObj->pBsBufPhyStart;
     stream.sliceInfoNum =  pObj->slice_info_num;
@@ -1025,7 +1038,11 @@ static VpuDecRetCode VPU_DecDecode(VpuDecObj* pObj, int* pOutBufRetCode)
         break;
       case CODEC_HAS_INFO:
         pObj->state = VPU_DEC_STATE_INITOK;
-        break;
+        if(pObj->nFrameSize == 0)
+          *pOutBufRetCode |= VPU_DEC_INIT_OK;
+        else
+          *pOutBufRetCode |= VPU_DEC_RESOLUTION_CHANGED;
+        return VPU_DEC_RET_SUCCESS;
       case CODEC_HAS_FRAME:
         *pOutBufRetCode |= VPU_DEC_ONE_FRM_CONSUMED;
         dobreak = true;
@@ -1033,10 +1050,6 @@ static VpuDecRetCode VPU_DecDecode(VpuDecObj* pObj, int* pOutBufRetCode)
       case CODEC_ABORTED:
         return VPU_DEC_RET_SUCCESS;
       case CODEC_WAITING_FRAME_BUFFER:
-        if(pObj->nFrameSize == 0)
-          *pOutBufRetCode |= VPU_DEC_INIT_OK;
-        else
-          *pOutBufRetCode |= VPU_DEC_RESOLUTION_CHANGED;
         return VPU_DEC_RET_SUCCESS;
       case CODEC_PIC_SKIPPED:
         break;
@@ -1083,7 +1096,6 @@ static VpuDecRetCode RvParseHeader(VpuDecObj* pObj, VpuBufferNode* pInData)
 {
   u32 tmp, length;
   u8 *buff;
-  OMX_VIDEO_PARAM_G1CONFIGTYPE g1Conf;
   unsigned int imageSize;
   bool bIsRV8;
   int i, nPicWidth, nPicHeight;
@@ -1126,14 +1138,11 @@ static VpuDecRetCode RvParseHeader(VpuDecObj* pObj, VpuBufferNode* pInData)
         frame_sizes[2*j + 1] = (*p++) << 2;
       }
     }
-    memset(&g1Conf, 0, sizeof(OMX_VIDEO_PARAM_G1CONFIGTYPE));
-    g1Conf.bEnableTiled = false;
-    g1Conf.bAllowFieldDBP = false;
     pObj->codec =
       HantroHwDecOmx_decoder_create_rv(pObj->pdwl,
           bIsRV8, size[num_frame_sizes], frame_sizes,
           nPicWidth, nPicHeight,
-          &g1Conf);
+          &pObj->config.g1_conf);
   }
 
   pInData->sCodecData.nSize = 0;
@@ -1223,7 +1232,6 @@ VpuDecRetCode VPU_DecDecodeBuf(VpuDecHandle InHandle, VpuBufferNode* pInData,
     if(pObj->CodecFormat==VPU_V_RV)
       RvParseHeader(pObj, pInData);
     VPU_DecProcessInBuf(pObj, pInData);
-
     *pOutBufRetCode |= VPU_DEC_INPUT_USED;
 
     if(pObj->nBsBufLen < pObj->frame_size)
@@ -1255,7 +1263,7 @@ VpuDecRetCode VPU_DecDecodeBuf(VpuDecHandle InHandle, VpuBufferNode* pInData,
   }else if(*pOutBufRetCode & VPU_DEC_NO_ENOUGH_BUF){
     *pOutBufRetCode &= ~VPU_DEC_INPUT_USED;
     pObj->bConsumeInputLater = true;
-  //for pObj->codec->decode return CODEC_PENDING_FLUSH
+  //when pObj->codec->decode return CODEC_PENDING_FLUSH
   }else if( !(*pOutBufRetCode&VPU_DEC_INPUT_USED)){
     pObj->bConsumeInputLater = true;
   }
@@ -1277,12 +1285,6 @@ VpuDecRetCode VPU_DecGetInitialInfo(VpuDecHandle InHandle, VpuDecInitInfo * pOut
 
   pVpuObj=(VpuDecHandleInternal *)InHandle;
   pObj=&pVpuObj->obj;
-
-  if(pVpuObj->obj.state!=VPU_DEC_STATE_INITOK)
-  {
-    VPU_ERROR("%s: failure: error state %d \r\n",__FUNCTION__,pVpuObj->obj.state);
-    return VPU_DEC_RET_WRONG_CALL_SEQUENCE;
-  }
 
   memset(&info, 0, sizeof(STREAM_INFO));
 
@@ -1313,6 +1315,40 @@ VpuDecRetCode VPU_DecGetInitialInfo(VpuDecHandle InHandle, VpuDecInitInfo * pOut
     pOutInitInfo->PicCropRect.nTop = 0;
     pOutInitInfo->PicCropRect.nRight = info.width;
     pOutInitInfo->PicCropRect.nBottom = info.height;
+  }
+
+  if (info.hdr10_available)
+  {
+    pOutInitInfo->hasHdr10Meta = true;
+    pOutInitInfo->Hdr10Meta.redPrimary[0] = info.hdr10_metadata.redPrimary[0];
+    pOutInitInfo->Hdr10Meta.redPrimary[1] = info.hdr10_metadata.redPrimary[1];
+    pOutInitInfo->Hdr10Meta.greenPrimary[0] = info.hdr10_metadata.greenPrimary[0];
+    pOutInitInfo->Hdr10Meta.greenPrimary[1] = info.hdr10_metadata.greenPrimary[1];
+    pOutInitInfo->Hdr10Meta.bluePrimary[0] = info.hdr10_metadata.bluePrimary[0];
+    pOutInitInfo->Hdr10Meta.bluePrimary[1] = info.hdr10_metadata.bluePrimary[1];
+    pOutInitInfo->Hdr10Meta.whitePoint[0] = info.hdr10_metadata.whitePoint[0];
+    pOutInitInfo->Hdr10Meta.whitePoint[1] = info.hdr10_metadata.whitePoint[1];
+    pOutInitInfo->Hdr10Meta.maxMasteringLuminance = info.hdr10_metadata.maxMasteringLuminance;
+    pOutInitInfo->Hdr10Meta.minMasteringLuminance = info.hdr10_metadata.minMasteringLuminance;
+    pOutInitInfo->Hdr10Meta.maxContentLightLevel = info.hdr10_metadata.maxContentLightLevel;
+    pOutInitInfo->Hdr10Meta.maxFrameAverageLightLevel = info.hdr10_metadata.maxFrameAverageLightLevel;
+  }
+  else
+  {
+    pOutInitInfo->hasHdr10Meta = false;
+  }
+
+  if (info.colour_desc_available)
+  {
+    pOutInitInfo->ColourDesc.colourPrimaries = info.colour_primaries;
+    pOutInitInfo->ColourDesc.transferCharacteristics = info.transfer_characteristics;
+    pOutInitInfo->ColourDesc.matrixCoeffs = info.matrix_coeffs;
+  }
+
+  if (info.chroma_loc_info_available)
+  {
+    pOutInitInfo->ChromaLocInfo.chromaSampleLocTypeTopField = info.chroma_sample_loc_type_top_field;
+    pOutInitInfo->ChromaLocInfo.chromaSampleLocTypeBottomField = info.chroma_sample_loc_type_bottom_field;
   }
 
   pObj->nFrameSize = info.framesize;
@@ -1372,7 +1408,6 @@ VpuDecRetCode VPU_DecRegisterFrameBuffer(VpuDecHandle InHandle,VpuFrameBuffer *p
     buffer.allocsize = pObj->nFrameSize;
 
     pInFrameBufArray++;
-
 
     ret = pObj->codec->setframebuffer(pObj->codec, &buffer, nNum);
     if (ret == CODEC_ERROR_BUFFER_SIZE)

@@ -43,14 +43,6 @@ role_priority=3;
 $
 
 @
-component_name=OMX.Freescale.std.clocksrc.sw-based;
-library_path=lib_omx_clock_v2_arm11_elinux.so;
-component_entry_function=ClockInit;
-component_role=clocksrc;
-role_priority=3;
-$
-
-@
 component_name=OMX.Freescale.std.audio_decoder.pcm.sw-based;
 library_path=lib_omx_pcm_dec_v2_arm11_elinux.so;
 component_entry_function=PcmDecInit;
@@ -62,7 +54,7 @@ $
 component_name=OMX.Freescale.std.audio_decoder.aac.sw-based;
 library_path=lib_omx_aac_dec_v2_arm11_elinux.so;
 component_entry_function=AacDecInit;
-component_role=audio_decoder.aac;
+component_role=audio_decoder.aac-fsl;
 role_priority=2;
 $
 

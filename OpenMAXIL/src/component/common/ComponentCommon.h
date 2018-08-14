@@ -138,6 +138,7 @@ static OMX_U32 pxlfmt2bpp(OMX_COLOR_FORMATTYPE omx_pxlfmt)
 	case OMX_COLOR_FormatYUV420PackedPlanar:
 	case OMX_COLOR_FormatYUV420SemiPlanar:
 	case OMX_COLOR_FormatYUV444Interleaved:
+    case OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled:
 	  bpp = 12;
 	  break;
 	case OMX_COLOR_FormatL16:

@@ -141,6 +141,7 @@ class VideoFilter : public ComponentBase {
         virtual OMX_ERRORTYPE GetReturnedInputDataPtr(OMX_PTR* ppInput);
         virtual OMX_ERRORTYPE GetCropInfo(OMX_CONFIG_RECTTYPE *sCrop);
         virtual OMX_ERRORTYPE SetCropInfo(OMX_CONFIG_RECTTYPE *sCrop);
+        virtual OMX_BOOL DefaultOutputBufferNeeded();
 };
 
 #endif

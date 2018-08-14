@@ -155,7 +155,7 @@ extern "C" {
         ComponentBase *base = NULL;
         int fd = -1;
 
-        fd = open("/dev/mxc_hifi4", O_RDWR, 0);
+        fd = open("/vendor/firmware/imx/hifi/hifi4.bin", O_RDONLY, 0);
         if (fd < 0) {
             LOG_ERROR("BsacHwDec check hardware support fail\n");
             return OMX_ErrorHardware;

@@ -1,6 +1,6 @@
 /**
  *  Copyright (c) 2009-2015, Freescale Semiconductor Inc.,
- *  Copyright 2017 NXP
+ *  Copyright 2017-2018 NXP
  *  All Rights Reserved.
  *
  *  The following programs are the sole property of Freescale Semiconductor Inc.,
@@ -33,7 +33,6 @@ class Mp3Dec : public UniaDecoder{
         OMX_ERRORTYPE AudioFilterHandleBOS();
         OMX_ERRORTYPE AudioFilterHandleEOS();
         OMX_AUDIO_PARAM_MP3TYPE Mp3Type;
-        OMX_U32 handleEOSState;
         OMX_U32 delayLeft;
 };
 

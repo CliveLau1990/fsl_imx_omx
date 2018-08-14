@@ -25,7 +25,7 @@ make_hardware_patch=0
 TAG_FROM="imx-android-r9.1-rc3"
 FRAMEWORKS_TO="up2date"
 OMX_TO="up2date"
-MYANDROID_DIR="../../../"    # default location of this script is myAndroid/external/fsl_imx_omx/release_scripts
+MYANDROID_DIR="../../../"    # default location of this script is myAndroid/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/release_scripts
 COMMIT_FILE=""
 PATCH_FILE=""
 PREBUILD_TO="up2date"
@@ -92,11 +92,11 @@ showHelp()
     echo "parameters:"
     echo "          -from [tag_from] "
     echo "          -frameworks_to [frameworks_to]   - optional. target of frameworks/base. default: up2date"
-    echo "          -omx_to [omx_to]           - optional. target of external/fsl_imx_omx. default: up2date"
+    echo "          -omx_to [omx_to]           - optional. target of $(FSL_IMX_OMX_PATH)/fsl_imx_omx. default: up2date"
     echo "          -dir [path of myAndroid]"
     echo "          -patch [commit_file]       - optional. commits that are in git but be later than omx_to commit"
     echo "          -ext_patch [patch_file]       - optional. patch file that is not in git"
-    echo "          -prebuild_to [prebuild_to] - optional. default: up2date. commit or tag for device/fsl-proprietary.git"
+    echo "          -prebuild_to [prebuild_to] - optional. default: up2date. commit or tag for $(FSL_PROPRIETARY_PATH)/fsl-proprietary.git"
     echo ""
     echo "Example:  ./omx_upgrade.sh -from imx-android-r9.2-rc3 -frameworks_to imx-android-r9.4-rc3 -dir ../../../"
     echo ""
@@ -559,8 +559,8 @@ if [ "$make_frameworks_base_patch" = "true" ];then
 			touch *.h *.cpp
 			mm > log 2>&1 ;						checkResult
 		fi
-		if [ -d hardware/imx/mx5x/libcamera ]; then
-			cd hardware/imx/mx5x/libcamera;				checkResult
+		if [ -d $(IMX_PATH)/imx/mx5x/libcamera ]; then
+			cd $(IMX_PATH)/imx/mx5x/libcamera;				checkResult
 			touch *.h *.cpp
 			mm > log 2>&1 ;						checkResult
 		fi
@@ -575,18 +575,18 @@ set +x
 log "======================== make omx patch ========================"
 set -x
 
-cd $root/external
+cd $root/vendor/nxp
 if [ ! -d fsl_imx_omx ]; then
     echo "fsl_imx_omx does not exist!!!"
     exit 0
-    #git clone git://repomad/platform/external/fsl_imx_omx.git ;                checkResult
+    #git clone git://repomad/platform/$(FSL_IMX_OMX_PATH)/fsl_imx_omx.git ;                checkResult
     #cd fsl_imx_omx ;                                                           checkResult
 fi
 
 patch_count=0
 
 if [ "$COMMIT_FILE" != "" ]; then
-    cd $root/external/fsl_imx_omx ;                                            checkResult
+    cd $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx ;                                            checkResult
 
     cleanUpGit
 
@@ -617,7 +617,7 @@ log "========================= get omx source code =================="
 set -x
 
 
-cd $root/external/fsl_imx_omx ;                                            checkResult
+cd $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx ;                                            checkResult
 
 cleanUpGit
 
@@ -649,7 +649,7 @@ fi
 
 
 if [ "$PATCH_FILE" != "" ]; then
-    cd $root/external/fsl_imx_omx ;                                            checkResult
+    cd $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx ;                                            checkResult
 
     while read -r line
     do
@@ -665,7 +665,7 @@ set -x
 
 if [ $build_omx = 1 ]; then
 
-    cd $root/external/fsl_imx_omx ;                                                       checkResult 
+    cd $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx ;                                                       checkResult 
 
     find . -name "*.h" | xargs -I [ touch [ ;                                       checkResult
 
@@ -694,9 +694,9 @@ cd $root/device/fsl
 cleanUpGit
 git checkout -f $TAG_FROM
 
-cd $root/device/fsl-proprietary
+cd $root/$(FSL_PROPRIETARY_PATH)/fsl-proprietary
 if [ $? != 0 ];then
-	log "device/fsl-proprietary doesn't exist!!!"
+	log "$(FSL_PROPRIETARY_PATH)/fsl-proprietary doesn't exist!!!"
 	exit -1	
 fi
 cleanUpGit
@@ -728,7 +728,7 @@ set +x
 add_H263_to_makefile=1
 
 cd $root
-rm -f device/fsl-proprietary/omx/lib/*
+rm -f $(FSL_PROPRIETARY_PATH)/fsl-proprietary/omx/lib/*
 
 while read -r line
 do
@@ -738,8 +738,8 @@ do
      end=${findstring#*lib/}
      sofile=`echo $end | awk '{printf("%s ",$1);}'`
      #echo $sofile
-     if [ -f device/fsl-proprietary/codec/lib/$sofile ]; then
-        cp device/fsl-proprietary/codec/lib/$sofile device/fsl/proprietary/omx/lib;             checkResult
+     if [ -f $(FSL_PROPRIETARY_PATH)/fsl-proprietary/codec/lib/$sofile ]; then
+        cp $(FSL_PROPRIETARY_PATH)/fsl-proprietary/codec/lib/$sofile device/fsl/proprietary/omx/lib;             checkResult
      
      elif [ -f out/target/product/sabresd_6q/system/lib/$sofile ]; then
         cp out/target/product/sabresd_6q/system/lib/$sofile device/fsl/proprietary/omx/lib;       checkResult
@@ -756,8 +756,8 @@ done < device/fsl/proprietary/omx/fsl-omx.mk
 
 if [ $add_H263_to_makefile = 1 ];then
 	sofile=lib_H263_dec_v2_arm11_elinux.so
-	if [ -f device/fsl-proprietary/codec/lib/$sofile ]; then
-	    cp device/fsl-proprietary/codec/lib/$sofile device/fsl/proprietary/omx/lib;             checkResult
+	if [ -f $(FSL_PROPRIETARY_PATH)/fsl-proprietary/codec/lib/$sofile ]; then
+	    cp $(FSL_PROPRIETARY_PATH)/fsl-proprietary/codec/lib/$sofile device/fsl/proprietary/omx/lib;             checkResult
 	fi
 
 	rm -f temp
@@ -774,11 +774,11 @@ fi
 
 set -x
 
-#cp external/fsl_imx_omx/OpenMAXIL/release/registry/*_register  device/fsl-proprietary/omx/registry
+#cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/release/registry/*_register  $(FSL_PROPRIETARY_PATH)/fsl-proprietary/omx/registry
 
-cp external/fsl_imx_omx/OpenMAXIL/release/registry/core_register  device/fsl/proprietary/omx/registry
-cp external/fsl_imx_omx/OpenMAXIL/release/registry/contentpipe_register  device/fsl/proprietary/omx/registry
-cp external/fsl_imx_omx/OpenMAXIL/release/registry/component_register  device/fsl/proprietary/omx/registry/component_register
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/release/registry/core_register  device/fsl/proprietary/omx/registry
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/release/registry/contentpipe_register  device/fsl/proprietary/omx/registry
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/release/registry/component_register  device/fsl/proprietary/omx/registry/component_register
 
 
 
@@ -819,17 +819,17 @@ cd $root/device/fsl
 cleanUpGit
 
 # recorde last commit of omx
-cd ${root}/external/fsl_imx_omx
+cd ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx
 echo "omx_to = $OMX_TO"                                         >> log.txt
-echo "    last commit of external/fsl_imx_omx:"                 >> log.txt
-cd ${root}/external/fsl_imx_omx ;                               checkResult
+echo "    last commit of $(FSL_IMX_OMX_PATH)/fsl_imx_omx:"                 >> log.txt
+cd ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx ;                               checkResult
 GetLastCommit log.txt
 
 set +x
 log "===================== make excluded package ===================="
 set -x
 
-cd ${root}/external/fsl_imx_omx
+cd ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx
 script="android_codec_package.sh"
 	
 git checkout -f $TAG_FROM;                                                   checkResult
@@ -839,14 +839,14 @@ if [ ! -f $script ]; then
 	exit -1
 fi
 
-./$script ${final_name} ../../out/target/product/sabresd_6q/system/lib;            checkResult
+./$script ${final_name} ../../../out/target/product/sabresd_6q/system/lib;            checkResult
 
 set +x
 log "====================== collect packages ========================"
 set -x
 
 
-cd ${root}/external/fsl_imx_omx
+cd ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx
 mv imx-android-${final_name}-codec-excluded.tar.gz $target_dir;                 checkResult
 mv imx-android-${final_name}-codec-special.tar.gz $target_dir;                 checkResult
 
@@ -909,10 +909,10 @@ $ make                                   \n
 
 echo -e $readme_content > README.txt
 
-if [ -f $root/external/fsl_imx_omx/EULA ];then
-	cp $root/external/fsl_imx_omx/EULA . ;                                    checkResult
-elif [ -f $root/external/fsl_imx_omx/OpenMAXIL/doc/EULA.txt ];then
-	cp $root/external/fsl_imx_omx/OpenMAXIL/doc/EULA.txt ./EULA ;                                    checkResult
+if [ -f $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/EULA ];then
+	cp $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/EULA . ;                                    checkResult
+elif [ -f $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/doc/EULA.txt ];then
+	cp $root/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/OpenMAXIL/doc/EULA.txt ./EULA ;                                    checkResult
 else
 	log "Can not find EULA file!!!"
 	exit -1
@@ -947,12 +947,12 @@ if [ -f ${root}/frameworks/base/commit_log ]; then
     rm -f ${root}/frameworks/base/commit_log
 fi
 
-cat ${root}/external/fsl_imx_omx/log.txt                        >> log.txt
-rm ${root}/external/fsl_imx_omx/log.txt
+cat ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/log.txt                        >> log.txt
+rm ${root}/$(FSL_IMX_OMX_PATH)/fsl_imx_omx/log.txt
 
 echo "prebuild_to = $PREBUILD_TO"                               >> log.txt
-echo "    last commit of device/fsl-proprietary: "              >> log.txt
-cd ${root}/device/fsl-proprietary;                                          checkResult
+echo "    last commit of $(FSL_PROPRIETARY_PATH)/fsl-proprietary: "              >> log.txt
+cd ${root}/$(FSL_PROPRIETARY_PATH)/fsl-proprietary;                                          checkResult
 GetLastCommit ${target_dir}/log.txt
 cd $target_dir
 

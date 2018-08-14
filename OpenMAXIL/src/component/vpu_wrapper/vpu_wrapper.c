@@ -1820,7 +1820,12 @@ int VpuSaveDecodedFrameInfo(VpuDecObj* pObj, int index,DecOutputInfo * pCurDecFr
 				VPU_LOG("resolution change: original: [%d x %d], new: [%d x %d]!\r\n",pObj->nOriWidth,pObj->nOriHeight,pCurDecFrameInfo->decPicWidth,pCurDecFrameInfo->decPicHeight);
 				return 1;
 			}
-		}
+		}else if(Align(pCurDecFrameInfo->decPicWidth,16) > Align(pObj->nOriWidth,16) ||  Align(pCurDecFrameInfo->decPicHeight,16) > Align(pObj->nOriHeight,16)){
+            pObj->nResolutionChanged=1;
+            VPU_LOG("save pCurDecFrameInfo->decPicWidth=%d,origin=%d,h1=%d,h2=%d",
+                pCurDecFrameInfo->decPicWidth,pObj->nOriWidth,pCurDecFrameInfo->decPicHeight,pObj->nOriHeight);
+            return 1;
+        }
 	}
 
 	/*record the nearest decoded frame and accumulate the frame size reported by vpu*/
@@ -4825,7 +4830,7 @@ AfterGetOuput:
 	}
 
 	/*check whether resolution change happen*/
-	if((pObj->nDecResolutionChangeEnabled!=0)/*&&(frmDecoded==1)*/)
+	if(1/*(pObj->nDecResolutionChangeEnabled!=0)*/ /*&&(frmDecoded==1)*/)
 	{
 		if(pObj->nResolutionChanged)
 		{

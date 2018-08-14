@@ -1,6 +1,6 @@
 /**
  *  Copyright (c) 2009-2015, Freescale Semiconductor Inc.,
- *  Copyright 2017 NXP
+ *  Copyright 2017-2018 NXP
  *  All Rights Reserved.
  *
  *  The following programs are the sole property of Freescale Semiconductor Inc.,
@@ -20,12 +20,6 @@
 
 #define DSP_WRAPPER_LIB_NAME "lib_dsp_wrap_arm12_android.so"
 
-/* Mp3 dec handle eos state should be 0 ->1 -> 2 */
-typedef enum{
-    STATE_TO_ADD_ONE_FRAME    = 0,
-    STATE_TO_ADD_DELAY_SAMPLE = 1,
-    STATE_DONE                = 2
-}MP3DEC_HANDLE_EOS_STATE;
 Mp3Dec::Mp3Dec()
 {
     fsl_osal_strcpy((fsl_osal_char*)name, "OMX.Freescale.std.audio_decoder.mp3.sw-based");
@@ -38,7 +32,6 @@ Mp3Dec::Mp3Dec()
     codingType = OMX_AUDIO_CodingMP3;
     nPushModeInputLen = MP3_PUSH_MODE_LEN;
     outputPortBufferSize = MP3D_FRAME_SIZE* 2*2;
-    handleEOSState = STATE_TO_ADD_ONE_FRAME;
 
     decoderLibName = "lib_mp3d_wrap_arm12_elinux_android.so";
     OMX_INIT_STRUCT(&Mp3Type, OMX_AUDIO_PARAM_MP3TYPE);
@@ -248,10 +241,9 @@ OMX_ERRORTYPE Mp3Dec::AudioFilterHandleBOS()
     }
 
     //meet BOS, tran state to STATE_TO_ADD_ONE_FRAME.
-    if(delayLeft == 0){
-        handleEOSState = STATE_TO_ADD_ONE_FRAME;
+    if(delayLeft == 0)
         return OMX_ErrorNone;
-    }else
+    else
         return OMX_ErrorNotReady;
 }
 
@@ -260,28 +252,9 @@ OMX_ERRORTYPE Mp3Dec::AudioFilterHandleEOS()
     OMX_ERRORTYPE ret = OMX_ErrorNone;
     OMX_U32 padding = 0;
 
-    // hw-based decoder needn't add one frame in EOS state.
-    if (handleEOSState == STATE_TO_ADD_ONE_FRAME && !fsl_osal_strcmp(decoderLibName, DSP_WRAPPER_LIB_NAME)) {
-        handleEOSState = STATE_TO_ADD_DELAY_SAMPLE;
-    }
-
-    if(handleEOSState == STATE_TO_ADD_ONE_FRAME) {
-        // pad the end of the stream with one buffer of which the value are all 2(avoid gap/overlap),
-        // since that the actual last buffer isn't sent by mp3 decoder.
-        padding = MP3D_FRAME_SIZE * Mp3Type.nChannels * sizeof(OMX_S16);
-        handleEOSState = STATE_TO_ADD_DELAY_SAMPLE;
-        ret = OMX_ErrorNotComplete;
-    }
-    else if(handleEOSState == STATE_TO_ADD_DELAY_SAMPLE) {
-        // pad the end of the stream with 529 samples, since that many samples
-        // were trimmed off the beginning when decoding started
-        padding = MP3_DECODER_DELAY * Mp3Type.nChannels * sizeof(OMX_S16);
-        handleEOSState = STATE_DONE;
-        ret = OMX_ErrorNotComplete;
-    }
-    else
-        return ret;
-
+    // pad the end of the stream with 529 samples, since that many samples
+    // were trimmed off the beginning when decoding started
+    padding = MP3_DECODER_DELAY * Mp3Type.nChannels * sizeof(OMX_S16);
     fsl_osal_memset(pOutBufferHdr->pBuffer + pOutBufferHdr->nOffset + pOutBufferHdr->nFilledLen, 2, padding);
     pOutBufferHdr->nFilledLen += padding;
 
@@ -316,7 +289,7 @@ extern "C" {
         ComponentBase *base = NULL;
         int fd = -1;
 
-        fd = open("/dev/mxc_hifi4", O_RDWR, 0);
+        fd = open("/vendor/firmware/imx/hifi/hifi4.bin", O_RDONLY, 0);
         if (fd < 0) {
             LOG_ERROR("Mp3HwDec check hardware support fail\n");
             return OMX_ErrorHardware;

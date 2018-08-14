@@ -112,7 +112,7 @@ OMX_ERRORTYPE VideoFilter:: SetDefaultSetting()
     bInReturnBufferState = OMX_FALSE;
     nDecodeOnly = 0;
     pInBufferHdr = NULL;
-    bNeedOutBuffer = OMX_TRUE;
+    bNeedOutBuffer = DefaultOutputBufferNeeded();
     bNeedInputBuffer = OMX_TRUE;
     pImageConvert = NULL;
 
@@ -207,7 +207,7 @@ OMX_ERRORTYPE VideoFilter::FlushComponent(OMX_U32 nPortIndex)
                 break;
             ports[OUT_PORT]->SendBuffer(pBufferHdr);
         }
-        bNeedOutBuffer = OMX_TRUE;
+        bNeedOutBuffer = DefaultOutputBufferNeeded();
     }
 
     return OMX_ErrorNone;
@@ -235,7 +235,7 @@ OMX_ERRORTYPE VideoFilter::ComponentReturnBuffer(OMX_U32 nPortIndex)
                 break;
             ports[OUT_PORT]->SendBuffer(pBufferHdr);
         }
-        bNeedOutBuffer = OMX_TRUE;
+        bNeedOutBuffer = DefaultOutputBufferNeeded();
     }
 
     bInReturnBufferState = OMX_FALSE;
@@ -389,6 +389,18 @@ OMX_ERRORTYPE VideoFilter::PortFormatChanged(OMX_U32 nPortIndex)
         sInFmt.eCompressionFormat = sPortDef.format.video.eCompressionFormat;
         sInFmt.eColorFormat = sPortDef.format.video.eColorFormat;
         sInFmt.xFramerate = sPortDef.format.video.xFramerate;
+
+        // in case encoder's input buffer size is not passed in by SetParameter
+        if(sInFmt.eColorFormat != OMX_COLOR_FormatUnused){
+            OMX_U32 newBufferSize = MAX(sPortDef.format.video.nStride, (OMX_S32)sPortDef.format.video.nFrameWidth)
+                               * MAX(sPortDef.format.video.nSliceHeight, sPortDef.format.video.nFrameHeight)
+                               * pxlfmt2bpp(sInFmt.eColorFormat) / 8;
+            if(sPortDef.nBufferSize < newBufferSize){
+                printf("PortFormatChanged() adjust nBufferSize of input port: %d->%d",sPortDef.nBufferSize, newBufferSize);
+                sPortDef.nBufferSize = newBufferSize;
+                ports[IN_PORT]->SetPortDefinition(&sPortDef);
+            }
+        }
 
 		OMX_INIT_STRUCT(&sPortDef, OMX_PARAM_PORTDEFINITIONTYPE);
 		sPortDef.nPortIndex = OUT_PORT;
@@ -1119,5 +1131,9 @@ OMX_ERRORTYPE VideoFilter::GetMediaTime(OMX_S64 *ts)
     }else{
         return OMX_ErrorNotReady;
     }
+}
+OMX_BOOL VideoFilter::DefaultOutputBufferNeeded()
+{
+    return OMX_TRUE;
 }
 /* File EOF */

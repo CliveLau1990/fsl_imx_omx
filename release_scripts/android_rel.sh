@@ -8,14 +8,14 @@ fi
 
 VERSION=$1
 PKG_NAME=imx-android-$VERSION-codec-excluded
-BUILD_PATH=../../../out/target/product/imx51_bbg/system/lib
+BUILD_PATH=../../../../out/target/product/imx51_bbg/system/lib
 REL_PATH=../OpenMAXIL/release/lib/android
 
 echo Building source code...
-cd ../../../
+cd ../../../../
 source build/envsetup.sh
 lunch
-cd external/fsl_imx_omx
+cd $(FSL_IMX_OMX_PATH)/fsl_imx_omx
 find . -name "*.h" | xargs -I [ touch [
 mm > build.log 2>&1 || result=failed
 

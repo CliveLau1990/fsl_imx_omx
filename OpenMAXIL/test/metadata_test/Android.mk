@@ -7,10 +7,14 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
 	    metadata_test.cpp
 
+ifeq ($(FSL_CODEC_PATH),)
+     FSL_CODEC_PATH := device
+endif
+
 LOCAL_CFLAGS += $(FSL_OMX_CFLAGS) -DDIVXINT_USE_STDINT
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../ghdr \
-					$(LOCAL_PATH)/../../../../device/fsl-codec/ghdr \
+					$(FSL_CODEC_PATH)/fsl-codec/ghdr \
                     $(LOCAL_PATH)/../../../OSAL/ghdr \
                     $(LOCAL_PATH)/../../../utils
 

@@ -25,6 +25,7 @@
 #include "Memory.h"
 #endif
 #include <graphics_ext.h>
+#include <ui/Fence.h>
 #include <ui/Rect.h>
 #include <ui/GraphicBufferMapper.h>
 #include <inttypes.h>
@@ -48,8 +49,9 @@
 #include <binder/MemoryDealer.h>
 #include <cutils/ashmem.h>
 #include <cutils/native_handle.h>
-
+#include <cutils/properties.h>
 #define MAX_BUFFER_CNT (32)
+#define kFenceTimeoutMs 1000  // keep align with IOMX.h
 
 // flac definitions keep align with OMX_Audio.h and OMX_Index in frameworks/native/include/media/openmax
 #define OMX_AUDIO_CodingAndroidFLAC 28
@@ -71,7 +73,7 @@ namespace android {
 
 class FSLOMXWrapper {
     public:
-        FSLOMXWrapper();
+        FSLOMXWrapper(const char *name);
         OMX_COMPONENTTYPE *MakeWapper(OMX_HANDLETYPE pHandle);
         OMX_ERRORTYPE MakeTunneledWapper();
         OMX_COMPONENTTYPE *GetComponentHandle();
@@ -536,7 +538,7 @@ static OMX_ERRORTYPE TunneledWrapperComponentRoleEnum(
 
 
 
-FSLOMXWrapper::FSLOMXWrapper()
+FSLOMXWrapper::FSLOMXWrapper(const char *name)
 {
     nBufferCnt = 0;
     ComponentHandle = NULL;
@@ -551,6 +553,17 @@ FSLOMXWrapper::FSLOMXWrapper()
     nNativeBuffersUsage |= GRALLOC_USAGE_PROTECTED;
     #endif
     #endif
+
+    #ifdef MALONE_VPU
+    //remove the flag when running software decoder
+    //enable the flag for test
+    //nNativeBuffersUsage |= GRALLOC_USAGE_PRIVATE_3;
+    #endif
+
+    if(name && !strncmp(name, "OMX.Freescale.std.video_decoder", 31)
+        && strstr(name,"sw-based")){
+        nNativeBuffersUsage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
+    }
 
     bStoreMetaData = OMX_FALSE;
     bStoreANWBufferInMetadata = OMX_FALSE;
@@ -662,7 +675,8 @@ static OMX_FORMAT_CONVERT_TABLE format_table[] = {{OMX_COLOR_FormatYUV420SemiPla
                                 {OMX_COLOR_FormatYUV420Planar,HAL_PIXEL_FORMAT_YCbCr_420_P},
                                 {OMX_COLOR_Format16bitRGB565,HAL_PIXEL_FORMAT_RGB_565},
                                 {OMX_COLOR_FormatYUV422Planar,HAL_PIXEL_FORMAT_YCbCr_422_P},
-                                {OMX_COLOR_FormatYUV422SemiPlanar,HAL_PIXEL_FORMAT_YCbCr_422_SP}};
+                                {OMX_COLOR_FormatYUV422SemiPlanar,HAL_PIXEL_FORMAT_YCbCr_422_SP},
+                                /*{OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled,HAL_PIXEL_FORMAT_NV12_TILED}*/};
 OMX_U32 FSLOMXWrapper::ConvertAndroidToOMXColorFormat(OMX_U32 index)
 {
     OMX_U32 i = 0;
@@ -1124,8 +1138,8 @@ OMX_ERRORTYPE FSLOMXWrapper::SetParameter(
                 OMX_INIT_STRUCT(&sPortDef, OMX_PARAM_PORTDEFINITIONTYPE);
                 sPortDef.nPortIndex = pPortDef->nPortIndex;
                 OMX_GetParameter(ComponentHandle, OMX_IndexParamPortDefinition, &sPortDef);
-                if(pPortDef->nBufferSize != sPortDef.nBufferSize)
-                    pPortDef->nBufferSize = sPortDef.nBufferSize;
+                if(pPortDef->nBufferSize != 12)
+                    pPortDef->nBufferSize = 12;
             }
             ret = OMX_SetParameter(ComponentHandle, nParamIndex, pStructure);
             break;
@@ -1341,6 +1355,7 @@ OMX_ERRORTYPE FSLOMXWrapper::DoUseNativeBuffer(
 	#else
 	fsl::Memory *prvHandle = (fsl::Memory*)pGraphicBuffer->getNativeBuffer()->handle;
 	#endif
+
     OMX_PTR vAddr = NULL;
     pGraphicBuffer->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &vAddr);
     if(vAddr == NULL) {
@@ -1439,6 +1454,20 @@ OMX_ERRORTYPE FSLOMXWrapper::EmptyThisBuffer(
            (OMX_PTR)(unsigned long) pGrallocHandle->phys;
         LOGV("%s Gralloc=0x%p, phys = 0x%" PRIx64 "", __FUNCTION__, pGrallocHandle,
                 pGrallocHandle->phys);
+
+        if(pBufferHdr->nFilledLen >= 12){
+            pTempBuffer++;
+            int nFenceFd = *pTempBuffer;
+            if (nFenceFd >= 0) {
+                sp<Fence> fence = new Fence(nFenceFd);
+                *pTempBuffer = -1;
+                status_t err = fence->wait(kFenceTimeoutMs);
+                if (err != OK) {
+                    ALOGE("Timed out waiting on input fence");
+                    return OMX_ErrorUndefined;
+                }
+            }
+        }
 
         if (bSetGrallocBufferParameter == OMX_FALSE) {
             GRALLOC_BUFFER_PARAMETER sGrallocBufferParam;
@@ -1590,10 +1619,30 @@ OMX_ERRORTYPE FSLOMXPlugin::makeComponentInstance(
         OMX_COMPONENTTYPE **component)
 {
     OMX_ERRORTYPE ret = OMX_ErrorNone;
-
+    //this is for 8qm a0 board, will remove the code in the future.
+    char str_value[PROPERTY_VALUE_MAX];
+    bool skip_hw_video_decoder = false;
+    bool skip_hw_audio_decoder = false;
+    memset(str_value, 0, PROPERTY_VALUE_MAX);
+    property_get("ro.boot.soc_type", str_value, "non");
+    if(!strcmp(str_value,"imx8qm")){
+        skip_hw_video_decoder = true;
+        skip_hw_audio_decoder = true;
+        ALOGV("skip all hardware codec");
+    }else if(!strcmp(str_value,"imx8qxp")){
+        skip_hw_video_decoder = true;
+        ALOGV("skip vpu decoder");
+    }
     LOGV("makeComponentInstance, appData: %p", appData);
 
-    FSLOMXWrapper *pWrapper = new FSLOMXWrapper;
+    if((NULL != strstr(name, "hw-based") && NULL != strstr(name, "audio_decoder" )) && skip_hw_audio_decoder){
+        return OMX_ErrorUndefined;
+    }
+    if((NULL != strstr(name, "hw-based") && NULL != strstr(name, "video_decoder" )) && skip_hw_video_decoder){
+        return OMX_ErrorUndefined;
+    }
+
+    FSLOMXWrapper *pWrapper = new FSLOMXWrapper(name);
     if(pWrapper == NULL)
         return OMX_ErrorInsufficientResources;
 

@@ -10,10 +10,10 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CFLAGS += $(FSL_OMX_CFLAGS)
 LOCAL_LDFLAGS += $(FSL_OMX_LDFLAGS)
-LOCAL_C_INCLUDES += $(FSL_OMX_PATH)/../../external/icu/icu4c/source/common \
-                    $(FSL_OMX_PATH)/../../external/icu/icu4c/source/i18n \
-                    $(FSL_OMX_PATH)/../../frameworks/av/include/media \
-                    $(FSL_OMX_PATH)/../../frameworks/av/media/libstagefright \
+LOCAL_C_INCLUDES += external/icu/icu4c/source/common \
+                    external/icu/icu4c/source/i18n \
+                    frameworks/av/include/media \
+                    frameworks/av/media/libstagefright \
                     $(FSL_OMX_PATH)/utils \
                     $(FSL_OMX_PATH)/OSAL/ghdr
 

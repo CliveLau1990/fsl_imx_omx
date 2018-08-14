@@ -1618,7 +1618,7 @@ OMX_ERRORTYPE VpuEncoder::SetParameter(OMX_INDEXTYPE nParamIndex, OMX_PTR pCompo
 		if(OMX_ErrorNone!=SetRoleFormat((OMX_STRING)cRole))
 		{
 			VPU_ENC_COMP_ERR_LOG("%s: set role format failure \r\n",__FUNCTION__);
-			return OMX_ErrorBadParameter;
+			return OMX_ErrorUndefined;
 		}
 	}
 	else if (nParamIndex==OMX_IndexParamMemOperator)

@@ -19,10 +19,8 @@ LOCAL_SHARED_LIBRARIES := lib_omx_common_v2_arm11_elinux \
 			  lib_omx_res_mgr_v2_arm11_elinux \
 			  lib_vpu_wrapper
 
-ifneq ($(BOARD_VPU_TYPE), hantro)
+ifeq ($(BOARD_VPU_TYPE), chipsmedia)
 LOCAL_SHARED_LIBRARIES += libvpu
-else
-LOCAL_CFLAGS += -DHANTRO_VPU
 endif
 
 LOCAL_PRELINK_MODULE := false

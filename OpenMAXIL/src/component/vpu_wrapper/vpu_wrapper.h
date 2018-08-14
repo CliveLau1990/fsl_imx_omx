@@ -1,6 +1,7 @@
 /*
  *  Copyright (c) 2010-2016, Freescale Semiconductor Inc.,
  *  All Rights Reserved.
+ * Copyright 2017 NXP
  *
  *  The following programs are the sole property of Freescale Semiconductor Inc.,
  *  and contain its proprietary and confidential information.
@@ -17,6 +18,7 @@
  *	2011-12-22		eagle zhou		1.0				refine api
  *	2012-01-**		eagle zhou		1.0.*			add new features: including tile format,etc
  *	2016-12-30	  Song Bing			2.0.0			Add Hantro video decoder support
+ *	2017-11-20	  Song Bing			3.0.0			Add Amphion video decoder support
  */
 
 #ifndef VPU_WRAPPER_H
@@ -29,7 +31,7 @@ extern "C" {
 /**************************** version info ***********************************/
 #define VPU_WRAPPER_VERSION(major, minor, release)	 \
 	(((major) << 16) + ((minor) << 8) + (release))
-#define VPU_WRAPPER_VERSION_CODE	VPU_WRAPPER_VERSION(2, 1, 0)
+#define VPU_WRAPPER_VERSION_CODE	VPU_WRAPPER_VERSION(3, 0, 0)
 
 /**************************** decoder part **********************************/
 
@@ -245,7 +247,7 @@ typedef struct {
 	int nEnableVideoCompressor;
 	int nPixelFormat; /*output 10 bit or cut to 8 bit for Hantro G2. 0 for output 10 bit, 1 for cut to 8 bit */
 
-	int nAdaptiveMode;			/*reserved for future extension*/
+	int nAdaptiveMode;
 	void* pAppCxt;			/*reserved for future application extension*/
     int nSecureMode;
 } VpuDecOpenParam;
@@ -294,6 +296,28 @@ typedef struct {
 //	VpuDecAvcSliceBufInfo avcSliceBufInfo;
 //} VpuDecBufInfo;
 
+typedef struct VpuHDR10Meta {
+        unsigned int redPrimary[2];
+        unsigned int greenPrimary[2];
+        unsigned int bluePrimary[2];
+        unsigned int whitePoint[2];
+        unsigned int maxMasteringLuminance;
+        unsigned int minMasteringLuminance;
+        unsigned int maxContentLightLevel;
+        unsigned int maxFrameAverageLightLevel;
+} VpuHDR10Meta;
+
+typedef struct VpuColourDesc {
+  unsigned int colourPrimaries;
+  unsigned int transferCharacteristics;
+  unsigned int matrixCoeffs;
+  unsigned int fullRange;
+} VpuColourDesc;
+
+typedef struct VpuChromaLocInfo {
+  unsigned int chromaSampleLocTypeTopField;
+  unsigned int chromaSampleLocTypeBottomField;
+} VpuChromaLocInfo;
 
 typedef struct {
 	int nPicWidth;		// {(PicX+15)/16} * 16
@@ -332,6 +356,11 @@ typedef struct {
 
 	int nReserved[3];			/*reserved for future extension*/
 	void* pSpecialInfo;		/*reserved for future special extension*/
+	int hasColorDesc;
+	int hasHdr10Meta;
+	VpuHDR10Meta Hdr10Meta; /* HDR10 meta data */
+	VpuColourDesc ColourDesc;
+	VpuChromaLocInfo ChromaLocInfo;
 } VpuDecInitInfo;
 
 /*
@@ -355,7 +384,9 @@ typedef struct {
 	int nFrmHeight;			/*support dynamic resolution*/
 	VpuRect FrmCropRect;	/*support dynamic resolution*/
 	unsigned int nQ16ShiftWidthDivHeightRatio;	/*support dynamic ratio, refer to definition in struct 'VpuDecInitInfo'*/
-	int nReserved[9];		/*reserved for recording other info*/
+	int rfc_luma_offset;
+	int rfc_chroma_offset;
+	int nReserved[7];		/*reserved for recording other info*/
 }VpuFrameExtInfo;
 
 typedef struct {

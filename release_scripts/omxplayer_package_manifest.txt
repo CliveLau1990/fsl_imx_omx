@@ -1,4 +1,4 @@
 Package								License
 ----------							----------
-device/fsl-codec						Freescale EULA
-platform/external/fsl_imx_omx					Freescale EULA
+$(FSL_CODEC_PATH)/fsl-codec						Freescale EULA
+$(FSL_IMX_OMX_PATH)/fsl_imx_omx						Freescale EULA

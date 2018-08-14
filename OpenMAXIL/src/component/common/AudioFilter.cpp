@@ -20,6 +20,7 @@ AudioFilter::AudioFilter()
     bSendFirstPortSettingChanged = OMX_TRUE;
     bFirstOutput = OMX_TRUE;
     bConvertEnable = OMX_FALSE;
+    pInBufferHdr = pOutBufferHdr = NULL;
 }
 
 OMX_ERRORTYPE AudioFilter::GetParameter(
@@ -160,7 +161,6 @@ OMX_ERRORTYPE AudioFilter::InstanceInit()
 		return OMX_ErrorInsufficientResources;
 	}
 
-	pInBufferHdr = pOutBufferHdr = NULL;
 	bReceivedEOS = OMX_FALSE;
 	bFirstFrame = OMX_FALSE;
 	bCodecInit = OMX_FALSE;

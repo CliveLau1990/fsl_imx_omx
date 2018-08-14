@@ -13,8 +13,8 @@ LOCAL_CFLAGS += $(FSL_OMX_CFLAGS)
 LOCAL_LDFLAGS += $(FSL_OMX_LDFLAGS) -Wl,-Bsymbolic
 
 LOCAL_C_INCLUDES += $(FSL_OMX_INCLUDES) \
-		$(LOCAL_PATH)/../../../../../../external/libhevc/decoder \
-		$(LOCAL_PATH)/../../../../../../external/libhevc/common
+		external/libhevc/decoder \
+		external/libhevc/common
 
 LOCAL_STATIC_LIBRARIES  := libhevcdec
 

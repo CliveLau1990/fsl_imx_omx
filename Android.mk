@@ -1,3 +1,25 @@
+ifeq ($(FSL_CODEC_PATH),)
+	FSL_CODEC_PATH := device
+endif
+ifeq ($(IMX_VPU_CNM_PATH),)
+	IMX_VPU_CNM_PATH := external
+endif
+ifeq ($(IMX_PATH),)
+	IMX_PATH := hardware
+endif
+ifeq ($(IMX_LIB_PATH),)
+	IMX_LIB_PATH := external
+endif
+ifeq ($(IMX_VPU_HANTRO_PATH),)
+	IMX_VPU_HANTRO_PATH := external
+endif
+ifeq ($(FSL_PROPRIETARY_PATH),)
+	FSL_PROPRIETARY_PATH := device
+endif
+ifeq ($(FSL_IMX_OMX_PATH),)
+	FSL_IMX_OMX_PATH := external
+endif
+
 ifeq ($(PREBUILT_FSL_IMX_OMX),true)
 	HAVE_FSL_IMX_CODEC := false
 else
@@ -74,6 +96,23 @@ ifeq ($(ANDROID_VERSION_MACRO),700)
 	FSL_BUILD_OMX_PLAYER := false
 	FSL_OMX_CFLAGS += -DNO_FORCE_CONTIGUOUS
 endif
+endif
+
+#macros for vpu
+ifeq ($(BOARD_HAVE_VPU), true)
+
+ifeq ($(BOARD_VPU_TYPE), chipsmedia)
+FSL_OMX_CFLAGS += -DCHIPSMEDIA_VPU
+endif
+
+ifeq ($(BOARD_VPU_TYPE), hantro)
+FSL_OMX_CFLAGS += -DHANTRO_VPU
+endif
+
+ifeq ($(BOARD_VPU_TYPE), malone)
+FSL_OMX_CFLAGS += -DMALONE_VPU
+endif
+
 endif
 
 use_gralloc_v3 := $(shell if [ $(ANDROID_VERSION_MACRO) -ge 800 ];then echo "true";fi)

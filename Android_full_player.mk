@@ -22,23 +22,23 @@ FSL_OMX_INCLUDES := \
 	$(LOCAL_PATH)/OpenMAXIL/src/graph_manager_interface \
 	$(LOCAL_PATH)/OpenMAXIL/src/client \
 	$(LOCAL_PATH)/OpenMAXIL/src/component/common \
-	$(LOCAL_PATH)/../imx-lib/ipu \
-	$(LOCAL_PATH)/../imx-vpu-cnm \
-	$(LOCAL_PATH)/../../frameworks/base/include \
-	$(LOCAL_PATH)/../../frameworks/base/include/media \
-	$(LOCAL_PATH)/../../frameworks/base/include/utils \
-	$(LOCAL_PATH)/../../frameworks/base/include/surfaceflinger \
-	$(LOCAL_PATH)/../../frameworks/base/media/libmediaplayerservice \
-	$(LOCAL_PATH)/../../frameworks/av/include \
-	$(LOCAL_PATH)/../../frameworks/av/include/media \
-	$(LOCAL_PATH)/../../frameworks/av/include/utils \
-	$(LOCAL_PATH)/../../frameworks/av/include/surfaceflinger \
-	$(LOCAL_PATH)/../../frameworks/av/media \
-	$(LOCAL_PATH)/../../frameworks/av/media/libmediaplayerservice \
-	$(LOCAL_PATH)/../../frameworks/native/include \
-	$(LOCAL_PATH)/../../frameworks/native/include/media/hardware \
-	$(LOCAL_PATH)/../../hardware/imx/include/ \
-	$(LOCAL_PATH)/../../system/core/include
+	$(IMX_LIB_PATH)/imx-lib/ipu \
+	$(IMX_VPU_CNM_PATH)/imx-vpu-cnm \
+	frameworks/base/include \
+	frameworks/base/include/media \
+	frameworks/base/include/utils \
+	frameworks/base/include/surfaceflinger \
+	frameworks/base/media/libmediaplayerservice \
+	frameworks/av/include \
+	frameworks/av/include/media \
+	frameworks/av/include/utils \
+	frameworks/av/include/surfaceflinger \
+	frameworks/av/media \
+	frameworks/av/media/libmediaplayerservice \
+	frameworks/native/include \
+	frameworks/native/include/media/hardware \
+	$(IMX_PATH)/imx/include/ \
+	system/core/include
 
 
 # Check Android Version
@@ -48,25 +48,25 @@ endif
 
 ifeq ($(findstring x2.3,x$(PLATFORM_VERSION)), x2.3)
     FSL_OMX_CFLAGS += -DMEDIA_SCAN_2_3_3_API -DOMX_STEREO_OUTPUT
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/base/media/libstagefright/include \
-			$(LOCAL_PATH)/../../device/fsl/proprietary/codec/ghdr \
-			$(LOCAL_PATH)/../../device/fsl/proprietary/codec/ghdr/common \
-			$(LOCAL_PATH)/../../device/fsl/proprietary/codec/ghdr/wma10
+    FSL_OMX_INCLUDES += frameworks/base/media/libstagefright/include \
+			device/fsl/proprietary/codec/ghdr \
+			device/fsl/proprietary/codec/ghdr/common \
+			device/fsl/proprietary/codec/ghdr/wma10
 else
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../device/fsl-codec/ghdr \
-			$(LOCAL_PATH)/../../device/fsl-codec/ghdr/common \
-			$(LOCAL_PATH)/../../device/fsl-codec/ghdr/wma10
+    FSL_OMX_INCLUDES += $(FSL_CODEC_PATH)/fsl-codec/ghdr \
+			$(FSL_CODEC_PATH)/fsl-codec/ghdr/common \
+			$(FSL_CODEC_PATH)/fsl-codec/ghdr/wma10
 endif
 
 ifeq ($(findstring x3.,x$(PLATFORM_VERSION)), x3.)
     FSL_OMX_CFLAGS += -DMEDIA_SCAN_2_3_3_API -DHWC_RENDER -DOMX_STEREO_OUTPUT
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/base/media/libstagefright/include \
-	$(LOCAL_PATH)/../../frameworks/base/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/base/media/libstagefright/include \
+	frameworks/base/include/ui/egl
     ifeq ($(TARGET_BOARD_PLATFORM), imx5x)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx5x/libgralloc
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx5x/libgralloc
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx6)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx6/libgralloc
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx6/libgralloc
     endif
 endif
 
@@ -78,16 +78,16 @@ ifeq ($(findstring x4.,x$(PLATFORM_VERSION)), x4.)
 	FSL_OMX_CFLAGS += -UDOMX_STEREO_OUTPUT
     endif
 
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/base/media/libstagefright/include \
-	$(LOCAL_PATH)/../../frameworks/base/include/ui/egl
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/av/include/media/stagefright/ \
-	$(LOCAL_PATH)/../../frameworks/av/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/base/media/libstagefright/include \
+	frameworks/base/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/av/include/media/stagefright/ \
+	frameworks/av/include/ui/egl
     ifeq ($(TARGET_BOARD_PLATFORM), imx5x)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx5x/libgralloc
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx5x/libgralloc
         FSL_OMX_CFLAGS += -DMX5X
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx6)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
 		FSL_OMX_CFLAGS += -DMX6X
     endif
 endif
@@ -95,20 +95,20 @@ ifeq ($(findstring x5.,x$(PLATFORM_VERSION)), x5.)
     FSL_OMX_CFLAGS += -DMEDIA_SCAN_2_3_3_API
     FSL_OMX_CFLAGS += -UDOMX_STEREO_OUTPUT
 
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/base/media/libstagefright/include \
-	$(LOCAL_PATH)/../../frameworks/base/include/ui/egl
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/av/include/media/stagefright/ \
-	$(LOCAL_PATH)/../../frameworks/av/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/base/media/libstagefright/include \
+	frameworks/base/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/av/include/media/stagefright/ \
+	frameworks/av/include/ui/egl
     ifeq ($(TARGET_BOARD_PLATFORM), imx5x)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx5x/libgralloc
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx5x/libgralloc
         FSL_OMX_CFLAGS += -DMX5X
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx6)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
 		FSL_OMX_CFLAGS += -DMX6X
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx7)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
 		FSL_OMX_CFLAGS += -DMX7X
     endif
 endif
@@ -116,20 +116,20 @@ ifeq ($(findstring x6.,x$(PLATFORM_VERSION)), x6.)
     FSL_OMX_CFLAGS += -DMEDIA_SCAN_2_3_3_API
     FSL_OMX_CFLAGS += -UDOMX_STEREO_OUTPUT
 
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/base/media/libstagefright/include \
-	$(LOCAL_PATH)/../../frameworks/base/include/ui/egl
-    FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../frameworks/av/include/media/stagefright/ \
-	$(LOCAL_PATH)/../../frameworks/av/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/base/media/libstagefright/include \
+	frameworks/base/include/ui/egl
+    FSL_OMX_INCLUDES += frameworks/av/include/media/stagefright/ \
+	frameworks/av/include/ui/egl
     ifeq ($(TARGET_BOARD_PLATFORM), imx5x)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/mx5x/libgralloc
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/mx5x/libgralloc
         FSL_OMX_CFLAGS += -DMX5X
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx6)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
 		FSL_OMX_CFLAGS += -DMX6X
     endif
     ifeq ($(TARGET_BOARD_PLATFORM), imx7)
-        FSL_OMX_INCLUDES += $(LOCAL_PATH)/../../hardware/imx/display/gralloc_v2
+        FSL_OMX_INCLUDES += $(IMX_PATH)/imx/display/gralloc_v2
 		FSL_OMX_CFLAGS += -DMX7X
     endif
 endif
@@ -189,12 +189,12 @@ include $(FSL_OMX_PATH)/OpenMAXIL/src/component/aac_enc/Android.mk
 endif
 
 ifeq ($(BOARD_HAVE_VPU),true)
-FSL_OMX_INCLUDES += $(FSL_OMX_PATH)/../imx-lib/ipu \
-                    $(FSL_OMX_PATH)/../imx-vpu-cnm
+FSL_OMX_INCLUDES += $(IMX_LIB_PATH)/imx-lib/ipu \
+                    $(IMX_VPU_CNM_PATH)/imx-vpu-cnm
 
-FSL_OMX_INCLUDES +=	$(FSL_OMX_PATH)/../imx-vpu-hantro/decoder_sw/software/source/inc \
-					$(FSL_OMX_PATH)/../imx-vpu-hantro/openmax_il/source/decoder \
-					$(FSL_OMX_PATH)/../imx-vpu-hantro/openmax_il/source
+FSL_OMX_INCLUDES +=	$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/decoder_sw/software/source/inc \
+					$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/openmax_il/source/decoder \
+					$(IMX_VPU_HANTRO_PATH)/imx-vpu-hantro/openmax_il/source
 
 include $(FSL_OMX_PATH)/OpenMAXIL/src/component/vpu_wrapper/Android.mk
 include $(FSL_OMX_PATH)/OpenMAXIL/src/component/vpu_dec_v2/Android.mk

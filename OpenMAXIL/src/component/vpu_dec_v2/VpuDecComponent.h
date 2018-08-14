@@ -248,7 +248,7 @@ class VpuDecoder : public VideoFilter {
         OMX_ERRORTYPE CheckDropB(VpuDecHandle InHandle,OMX_TICKS nTimeStamp,OMX_PTR pClock,VPUCompSemaphor psem);
         OMX_ERRORTYPE ConfigVpu(VpuDecHandle InHandle,VpuDecConfig config,OMX_S32 param,VPUCompSemaphor psem);
         OMX_ERRORTYPE PortFormatChanged(OMX_U32 nPortIndex);
-
+        OMX_BOOL DefaultOutputBufferNeeded();
 };
 
 #endif

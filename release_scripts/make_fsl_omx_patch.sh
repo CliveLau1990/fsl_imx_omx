@@ -11,15 +11,15 @@ INFO_PATH=imx-release-info
 VERSION=`echo $1 | tr "[:lower:]" "[:upper:]"`
 
 # to android root
-cd ../../../
+cd ../../../..
 
 # in case current mode is core mode, switch to full mode
-if [ -f device/fsl-codec/fsl-codec.mk.bak ];then
-    mv device/fsl-codec/fsl-codec.mk.bak device/fsl-codec/fsl-codec.mk
+if [ -f $(FSL_CODEC_PATH)/fsl-codec/fsl-codec.mk.bak ];then
+    mv $(FSL_CODEC_PATH)/fsl-codec/fsl-codec.mk.bak $(FSL_CODEC_PATH)/fsl-codec/fsl-codec.mk
 fi
-sed -i 's/HAVE_FSL_IMX_CODEC := false/HAVE_FSL_IMX_CODEC := true/g' external/fsl_imx_omx/codec_env.mk
+sed -i 's/HAVE_FSL_IMX_CODEC := false/HAVE_FSL_IMX_CODEC := true/g' $(FSL_IMX_OMX_PATH)/fsl_imx_omx/codec_env.mk
 
-cd external/
+cd  vendor/nxp/
 
 if [ -d ${TARGET_DIR} ];then
     echo "removing old fsl_vpu_omx..."
@@ -49,7 +49,7 @@ cp -af fsl_imx_omx/OpenMAXIL/src/core                   $TARGET_DIR/OpenMAXIL/sr
 cp -af fsl_imx_omx/OpenMAXIL/release/registry/*         $TARGET_DIR/OpenMAXIL/release/registry/
 cp -af fsl_imx_omx/OpenMAXIL/ghdr                       $TARGET_DIR/OpenMAXIL/
 cp -af fsl_imx_omx/OpenMAXIL/test/vpu_test              $TARGET_DIR/OpenMAXIL/test/
-cp ../device/fsl-codec/ghdr/common/*.h      $TARGET_DIR/OpenMAXIL/src/component/common/
+cp ../$(FSL_CODEC_PATH)/fsl-codec/ghdr/common/*.h      $TARGET_DIR/OpenMAXIL/src/component/common/
 
 sed -i 's/ifeq ($(HAVE_FSL_IMX_CODEC),true)/ifeq ($(HAVE_FSL_IMX_CODEC),false)/g' $TARGET_DIR/OSAL/linux/Android.mk
 sed -i 's/ifeq ($(HAVE_FSL_IMX_CODEC),true)/ifeq ($(HAVE_FSL_IMX_CODEC),false)/g' $TARGET_DIR/utils/Android.mk
@@ -69,8 +69,8 @@ echo "=== Copy package and script file to root directory ==="
 sleep 1
 
 cd ../
-cp external/fsl_imx_omx/release_scripts/clean_obj_before_building.sh .
-cp external/fsl_imx_omx/release_scripts/switch_build_to.sh .
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/release_scripts/clean_obj_before_building.sh .
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/release_scripts/switch_build_to.sh .
 
 ##### get EULA from info git
 
@@ -95,14 +95,14 @@ sed -i "s/Date Created.*/Date Created:              $DATE/g" SCR-omxplayer.txt
 
 rm -rf $INFO_PATH
 
-cp external/fsl_imx_omx/release_scripts/omxplayer_package_manifest.txt .
+cp $(FSL_IMX_OMX_PATH)/fsl_imx_omx/release_scripts/omxplayer_package_manifest.txt .
 
 ##### make tar file
 
-tar czf android_${VERSION}_omxplayer_source.tar.gz external/fsl_imx_omx device/fsl-codec clean_obj_before_building.sh switch_build_to.sh EULA.txt SCR-omxplayer.txt omxplayer_package_manifest.txt
+tar czf android_${VERSION}_omxplayer_source.tar.gz $(FSL_IMX_OMX_PATH)/fsl_imx_omx $(FSL_CODEC_PATH)/fsl-codec clean_obj_before_building.sh switch_build_to.sh EULA.txt SCR-omxplayer.txt omxplayer_package_manifest.txt
 
-rm -rf external/fsl_imx_omx
-rm -rf device/fsl-codec
+rm -rf $(FSL_IMX_OMX_PATH)/fsl_imx_omx
+rm -rf $(FSL_CODEC_PATH)/fsl-codec
 
 echo "=== finished ==="
 sleep 1

@@ -102,6 +102,7 @@
 #define   OMX_COLOR_FormatAndroidOpaque (0x7F000789)
 #define   FSL_INDEXCOLOR(n) ((OMX_COLOR_FORMATTYPE)(OMX_COLOR_FormatVendorStartUnused + n))
 #define   OMX_COLOR_Format32bitRGBA8888 FSL_INDEXCOLOR(1)
+#define   OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled FSL_INDEXCOLOR(2)
 
 /**< fsl defined index */
 #define   FSL_INDEXTYPE(n) ((OMX_INDEXTYPE)(OMX_IndexVendorStartUnused + n))
@@ -785,6 +786,7 @@ typedef struct EnableAndroidNativeBuffersParams {
     OMX_U32 nPortIndex;
     OMX_BOOL enable;
 }OMX_PARAM_ENABLE_ANDROID_NATIVE_BUFFER;
+
 #endif
 
 /* File EOF */
